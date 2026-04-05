@@ -18,6 +18,7 @@ def train_model(X, y, out_path):
 
 if __name__ == "__main__":
     try:
+        os.makedirs(MODELS_DIR, exist_ok=True)
         X, y, label_map = load_dataset()
         
         # Save label mapping for prediction
