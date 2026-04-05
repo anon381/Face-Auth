@@ -64,17 +64,24 @@ def verify_face_only(img_bytes):
     return False, mean_dist, "Unknown"
 
 def _train_model_background():
-    env = os.environ.copy()
-    env["PYTHONPATH"] = BASE_DIR
-    import logging
     try:
-        res = subprocess.run([sys.executable, TRAIN_SCRIPT], env=env, cwd=BASE_DIR, capture_output=True, text=True)
-        if res.returncode != 0:
-             print("Background training failed:\nSTDOUT:\n", res.stdout, "\nSTDERR:\n", res.stderr)
-        else:
-             print("Background training succeeded.")
+        from src.feature_engineering import load_dataset
+        from src.train import train_model
+        from config import MODELS_DIR, MODEL_NAME
+        import os, pickle
+        
+        os.makedirs(MODELS_DIR, exist_ok=True)
+        X, y, label_map = load_dataset()
+        
+        label_map_path = os.path.join(MODELS_DIR, "label_map.pkl")
+        with open(label_map_path, "wb") as f:
+            pickle.dump(label_map, f)
+            
+        model_path = os.path.join(MODELS_DIR, MODEL_NAME)
+        train_model(X, y, model_path)
+        print("Background training completed successfully in-process.")
     except Exception as e:
-        print(f"Subprocess failed: {e}")
+        print(f"Background training failed: {e}")
 
 @app.post("/api/register")
 async def register_face(background_tasks: BackgroundTasks, employee_id: str = Form(...), image: UploadFile = File(...)):
@@ -92,7 +99,7 @@ async def register_face(background_tasks: BackgroundTasks, employee_id: str = Fo
     os.makedirs(output_dir, exist_ok=True)
     
     cv2.imwrite(os.path.join(output_dir, "0.jpg"), img_array)
-    for i in range(1, 100):
+    for i in range(1, 10):
         alpha = np.random.uniform(0.7, 1.3)
         beta = np.random.uniform(-40, 40)
         aug_img = cv2.convertScaleAbs(img_array, alpha=alpha, beta=beta)
@@ -100,7 +107,7 @@ async def register_face(background_tasks: BackgroundTasks, employee_id: str = Fo
         
     flipped_img = cv2.flip(img_array, 1)
     cv2.imwrite(os.path.join(output_dir, "100.jpg"), flipped_img)
-    for i in range(101, 200):
+    for i in range(11, 20):
         alpha = np.random.uniform(0.7, 1.3)
         beta = np.random.uniform(-40, 40)
         aug_img = cv2.convertScaleAbs(flipped_img, alpha=alpha, beta=beta)
