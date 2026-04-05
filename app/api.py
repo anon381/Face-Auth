@@ -66,7 +66,15 @@ def verify_face_only(img_bytes):
 def _train_model_background():
     env = os.environ.copy()
     env["PYTHONPATH"] = BASE_DIR
-    subprocess.run([sys.executable, TRAIN_SCRIPT], env=env)
+    import logging
+    try:
+        res = subprocess.run([sys.executable, TRAIN_SCRIPT], env=env, cwd=BASE_DIR, capture_output=True, text=True)
+        if res.returncode != 0:
+             print("Background training failed:\nSTDOUT:\n", res.stdout, "\nSTDERR:\n", res.stderr)
+        else:
+             print("Background training succeeded.")
+    except Exception as e:
+        print(f"Subprocess failed: {e}")
 
 @app.post("/api/register")
 async def register_face(background_tasks: BackgroundTasks, employee_id: str = Form(...), image: UploadFile = File(...)):

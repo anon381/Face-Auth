@@ -8,7 +8,7 @@ import cv2
 from src.preprocessing import detect_and_crop_face, preprocess_face
 
 # Constants
-DATASET_PATH = "data/raw/"
+import os; BASE_DIR = os.path.dirname(os.path.dirname(__file__)); DATASET_PATH = os.path.join(BASE_DIR, "data", "raw")
 IMAGE_SIZE = 64
 
 # Initialize HOG descriptor
